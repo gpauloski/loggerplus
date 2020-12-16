@@ -79,11 +79,9 @@ class FileHandler(StreamHandler):
 
 class TorchTensorboardHandler(Handler):
     def __init__(self, filedir, verbose=True):
-        if not verbose:
-            return
-
         if not TORCH_TENSORBOARD:
             raise RuntimeError('Unable to import torch.utils.tensorboard')
+
         self.verbose = verbose
         self.filedir = filedir
         self.initialized = False
@@ -114,10 +112,11 @@ class TorchTensorboardHandler(Handler):
 
 class CSVHandler(Handler):
     def __init__(self, filename, overwrite=False, verbose=True):
-        if not verbose:
+        self.verbose = verbose
+
+        if not self.verbose:
             return
 
-        self.verbose = verbose
         self.headers = None
 
         if os.path.isfile(filename) and not overwrite:
