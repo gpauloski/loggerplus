@@ -124,7 +124,7 @@ class CSVHandler(Handler):
                 reader = csv.DictReader(f)
                 self.headers = reader.fieldnames
 
-        self.f = open(filename, 'w' if overwrite else 'a')
+        self.f = open(filename, 'w' if overwrite or not os.path.isfile(filename) else 'a')
         self.writer = None
         # We can only init the DictWriter once we know the fields so if the
         # file does not exists to read the headers, we delay creating the
