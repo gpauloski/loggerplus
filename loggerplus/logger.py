@@ -59,7 +59,11 @@ class FileHandler(StreamHandler):
         if not self.verbose:
             return
 
-        self.f = open(filename, 'w' if overwrite else 'a')
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+
+        self.f = open(filename, 'w' if overwrite or 
+                not os.path.isfile(filename) else 'a')
  
     def log(self, tag, step, **metrics):
         if self.verbose:
@@ -81,6 +85,9 @@ class TorchTensorboardHandler(Handler):
     def __init__(self, filedir, verbose=True):
         if not TORCH_TENSORBOARD:
             raise RuntimeError('Unable to import torch.utils.tensorboard')
+
+        if not os.path.isdir(filedir):
+            os.makedirs(filedir)
 
         self.verbose = verbose
         self.filedir = filedir
@@ -119,12 +126,16 @@ class CSVHandler(Handler):
 
         self.headers = None
 
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+
         if os.path.isfile(filename) and not overwrite:
             with open(filename, 'r') as f:
                 reader = csv.DictReader(f)
                 self.headers = reader.fieldnames
 
-        self.f = open(filename, 'w' if overwrite or not os.path.isfile(filename) else 'a')
+        self.f = open(filename, 'w' if overwrite 
+                or not os.path.isfile(filename) else 'a')
         self.writer = None
         # We can only init the DictWriter once we know the fields so if the
         # file does not exists to read the headers, we delay creating the
