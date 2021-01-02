@@ -59,7 +59,7 @@ class FileHandler(StreamHandler):
         if not self.verbose:
             return
 
-        if not os.path.isdir(os.path.dirname(filename)):
+        if not os.path.exists(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
 
         self.f = open(filename, 'w' if overwrite or 
@@ -86,8 +86,8 @@ class TorchTensorboardHandler(Handler):
         if not TORCH_TENSORBOARD:
             raise RuntimeError('Unable to import torch.utils.tensorboard')
 
-        if not os.path.isdir(filedir):
-            os.makedirs(filedir)
+        if not os.path.exists(filedir):
+            os.makedirs(filedir, exist_ok=True)
 
         self.verbose = verbose
         self.filedir = filedir
@@ -126,7 +126,7 @@ class CSVHandler(Handler):
 
         self.headers = None
 
-        if not os.path.isdir(os.path.dirname(filename)):
+        if not os.path.exists(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
 
         if os.path.isfile(filename) and not overwrite:
