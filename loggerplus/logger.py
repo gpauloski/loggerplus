@@ -69,10 +69,12 @@ class FileHandler(StreamHandler):
         if self.verbose:
             self.f.write('{} {} -- step: {}  {}\n'.format(
                     self._prefix(), tag, step, self._format_metrics(**metrics)))
+            self.f.flush()
 
     def info(self, message):
         if self.verbose:
             self.f.write('{} {}\n'.format(self._prefix(), message))
+            self.f.flush()
 
     def close(self):
         if not self.verbose:
@@ -124,7 +126,8 @@ class CSVHandler(Handler):
         if not self.verbose:
             return
 
-        self.headers = None
+        #self.headers = None
+        self.previous_values = []
 
         if not os.path.exists(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
@@ -132,16 +135,19 @@ class CSVHandler(Handler):
         if os.path.isfile(filename) and not overwrite:
             with open(filename, 'r') as f:
                 reader = csv.DictReader(f)
-                self.headers = reader.fieldnames
+                #self.headers = reader.fieldnames
+                for row in reader:
+                    self.previous_values.append(row)
 
-        self.f = open(filename, 'w' if overwrite 
-                or not os.path.isfile(filename) else 'a')
+        self.f = open(filename, 'w')
+                #if overwrite 
+                #or not os.path.isfile(filename) else 'a')
         self.writer = None
         # We can only init the DictWriter once we know the fields so if the
         # file does not exists to read the headers, we delay creating the
         # object to the first call to log()
-        if self.headers is not None:
-            self.writer = csv.DictWriter(self.f, fieldnames=self.headers)
+        #if self.headers is not None:
+        #    self.writer = csv.DictWriter(self.f, fieldnames=self.headers)
 
     def log(self, tag, step, **metrics):
         if not self.verbose:
@@ -157,6 +163,16 @@ class CSVHandler(Handler):
         if self.writer is None:
             self.writer = csv.DictWriter(self.f, fieldnames=metrics.keys())
             self.writer.writeheader()
+            # only write the previous values from before the current step
+            # so we do not have multiple values for the same step
+            for row in self.previous_values:
+                try:
+                    prev_step = int(row['step'])
+                except:
+                    prev_step = -1
+                if prev_step < step:
+                    self.writer.writerow(row)
+
         self.writer.writerow(metrics)
         self.f.flush()
 
