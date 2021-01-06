@@ -158,6 +158,7 @@ class CSVHandler(Handler):
             self.writer = csv.DictWriter(self.f, fieldnames=metrics.keys())
             self.writer.writeheader()
         self.writer.writerow(metrics)
+        self.f.flush()
 
     def info(self, message):
         pass
